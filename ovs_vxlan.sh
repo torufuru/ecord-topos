@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # usage:
-# ./ovs_vxlan.sh add <interface> <vlan_vid> <vxlan_vni> <vxlan_remote_ip>
+# ./ovs_vxlan.sh add <interface> <vlan_vid> <vxlan_vni> <vxlan_remote_ip> <vxlan_local_ip>
 # ./ovs_vxlan.sh delete <interface> <vlan_vid> <vxlan_vni>
 
 
@@ -10,18 +10,20 @@ IF=$2
 VID=$3
 VNI=$4
 REMOTE_IP=$5
+LOCAL_IP=$6
 
 function add_config() {
     IF=$1
     VID=$2
     VNI=$3
     REMOTE_IP=$4
+    LOCAL_IP=$5
 
     sudo vconfig add $IF $VID
     sudo ip link set $IF.$VID promisc on
     sudo ovs-vsctl add-br ovs$VID
     sudo ovs-vsctl add-port ovs$VID $IF.$VID
-    sudo ovs-vsctl add-port ovs$VID vxlan$VNI -- set interface vxlan$VNI type=vxlan options:key=$VNI options:remote_ip=$REMOTE_IP
+    sudo ovs-vsctl add-port ovs$VID vxlan$VNI -- set interface vxlan$VNI type=vxlan options:key=$VNI options:remote_ip=$REMOTE_IP options:local_ip=$LOCAL_IP
 }
 
 function delete_config() {
@@ -36,7 +38,7 @@ function delete_config() {
 }
 
 if [ $CMD = "add" ]; then
-    add_config $IF $VID $VNI $REMOTE_IP
+    add_config $IF $VID $VNI $REMOTE_IP $LOCAL_IP
 elif [ $CMD = "delete" ]; then
     delete_config $IF $VID $VNI
 fi
